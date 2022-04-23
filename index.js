@@ -18,7 +18,7 @@ db.once("open", () => {
 const bot = new TelegramBot(token, {polling: true});
 
 bot.on('message', async (msg) => {
-    if (msg.text === "/pidr") {
+    if (msg.text === "/pidr" || msg.text === "/pidr@tolstiyBot") {
         Tipok.findOne({userId: msg.from.id, groupId: msg.chat.id}, async (err, tipok) => {
             if (!tipok) {
                 const newTipok = new Tipok({
@@ -43,7 +43,7 @@ bot.on('message', async (msg) => {
                 }
             }
         });
-    } else if (msg.text === "/topdicks") {
+    } else if (msg.text === "/topdicks" || msg.text === "/topdicks@tolstiyBot") {
         Tipok.find({groupId: msg.chat.id}, async (err, tipki) => {
             let result = "";
             tipki.sort((a, b) => b.length - a.length).forEach((a, i) => {
