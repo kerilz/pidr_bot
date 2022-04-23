@@ -5,6 +5,7 @@ const db = require("./db");
 const Tipok = require("./Tipok");
 
 const token = process.argv[process.argv.indexOf("token") + 1];
+process.env.TZ = "Europe/Kiev";
 
 const bot = new TelegramBot(token, {polling: true});
 
