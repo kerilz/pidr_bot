@@ -6,19 +6,23 @@ const Tipok = require("./Tipok");
 
 const token = process.argv[process.argv.indexOf("token") + 1];
 
+const bot = new TelegramBot(token, {polling: true});
+
 db.on("error", (err) => {
     console.log("Error while connecting to the DB:\n " + err);
     throw err;
 });
 
-db.once("open", () => {
+db.once("open", async () => {
     console.log("[Worker with PID " + process.pid + "]: Database connection established");
+    let username = await bot.getMe();
+    username = username.username;
+    bot.username = username;
+    console.log(`Bot with username ${username} is initialized`)
 });
 
-const bot = new TelegramBot(token, {polling: true});
-
 bot.on('message', async (msg) => {
-    if (msg.text === "/pidr" || msg.text === "/pidr@tolstiyBot") {
+    if (msg.text === "/pidr" || msg.text === `/pidr@${bot.username}`) {
         Tipok.findOne({userId: msg.from.id, groupId: msg.chat.id}, async (err, tipok) => {
             if (!tipok) {
                 const newTipok = new Tipok({
@@ -43,7 +47,7 @@ bot.on('message', async (msg) => {
                 }
             }
         });
-    } else if (msg.text === "/topdicks" || msg.text === "/topdicks@tolstiyBot") {
+    } else if (msg.text === "/topdicks" || msg.text === `/topdicks@${bot.username}`) {
         Tipok.find({groupId: msg.chat.id}, async (err, tipki) => {
             let result = "";
             tipki.sort((a, b) => b.length - a.length).forEach((a, i) => {
