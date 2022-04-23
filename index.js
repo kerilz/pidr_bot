@@ -31,14 +31,13 @@ bot.on('message', async (msg) => {
                 await newTipok.save();
                 bot.sendMessage(msg.chat.id, `@${msg.from.username} ти тепер у грі і у тебе немає песюна`);
             } else {
-                const {hours, minutes} = timeUntilTomorrow(new Date());
                 if (!isToday(tipok.lastPlayed) || tipok.groupId == "-644900140") {
-                    const growth = grow();
+                    const growth = grow(tipok.length);
                     tipok.length = tipok.length + growth;
                     tipok.lastPlayed = new Date();
                     await tipok.save();
 
-                    bot.sendMessage(msg.chat.id, `@${msg.from.username}, твій песюн ${growth > 0 ? "виріс" : "скоротився"} на ${Math.abs(growth)}, Тепер його довжина: ${tipok.length} см. Продовжуй грати через ${hours} год., ${minutes} хв.`);
+                    bot.sendMessage(msg.chat.id, buildMessage(msg.from.username, growth, tipok.length));
                 } else {
                     bot.sendMessage(msg.chat.id, `@${msg.from.username}, ти сьогодні вже грав.`)
                 }
@@ -48,18 +47,19 @@ bot.on('message', async (msg) => {
         Tipok.find({groupId: msg.chat.id}, async (err, tipki) => {
             let result = "";
             tipki.sort((a, b) => b.length - a.length).forEach((a, i) => {
-                result += `${i+1}. ${a.name} – ${a.length} см.\n`
+                result += `${i + 1}. ${a.name} – ${a.length} см.\n`
             });
             bot.sendMessage(msg.chat.id, result);
         })
     }
 });
 
-const grow = () => {
+const grow = length => {
     let growth = Math.round(distribution.random(1));
     growth = growth > 10 ? 10 : growth;
     growth = growth < -10 ? -10 : growth;
-    return  growth !== 0 ? growth : growth + 1;
+    growth = growth !== 0 ? growth : growth + 1;
+    return growth + length >= 0 ? growth : grow(length)
 };
 
 const isToday = date => {
@@ -75,4 +75,12 @@ const timeUntilTomorrow = date => {
     tomorrowMidnight.setMinutes(0);
     const minutesRaw = (tomorrowMidnight.getTime() - date.getTime()) / (1000 * 60);
     return {hours: Math.floor(minutesRaw / 60), minutes: Math.round(minutesRaw - Math.floor(minutesRaw / 60) * 60)}
+};
+
+const buildMessage = (username, growth, length) => {
+    const newLengthText = newLength => {
+        return newLength === 0 ? `Тепер у тебе немає песюна.` : `Тепер його довжина: ${newLength} см.`
+    };
+    const {hours, minutes} = timeUntilTomorrow(new Date());
+    return `@${username}, твій песюн ${growth > 0 ? "виріс" : "скоротився"} на ${Math.abs(growth)} см. ${newLengthText(length)} Продовжуй грати через ${hours} год., ${minutes} хв.`
 };
